@@ -1,10 +1,14 @@
 package io.github.smootheez.modrinth
 
+import io.github.smootheez.core.ReleaseType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class ModrinthMetadata(
+    @SerialName("project_id")
+    val projectId: String,
+
     @SerialName("name")
     val name: String,
 
@@ -13,9 +17,6 @@ data class ModrinthMetadata(
 
     @SerialName("changelog")
     val changelog: String,
-
-    @SerialName("project_id")
-    val projectId: String,
 
     @SerialName("game_versions")
     val gameVersions: List<String>,
@@ -42,18 +43,20 @@ data class ModrinthMetadata(
 
 @Serializable
 enum class Status {
-    @SerialName("listed") LISTED,
-    @SerialName("archived") ARCHIVED,
-    @SerialName("draft") DRAFT,
-    @SerialName("unlisted") UNLISTED,
-    @SerialName("scheduled") SCHEDULED
-}
+    @SerialName("listed")
+    LISTED,
 
-@Serializable
-enum class ReleaseType {
-    @SerialName("release") RELEASE,
-    @SerialName("beta") BETA,
-    @SerialName("alpha") ALPHA
+    @SerialName("archived")
+    ARCHIVED,
+
+    @SerialName("draft")
+    DRAFT,
+
+    @SerialName("unlisted")
+    UNLISTED,
+
+    @SerialName("scheduled")
+    SCHEDULED
 }
 
 @Serializable
@@ -70,8 +73,15 @@ data class DependencyMetadata(
 
 @Serializable
 enum class DependencyType {
-    @SerialName("required") REQUIRED,
-    @SerialName("optional") OPTIONAL,
-    @SerialName("incompatible") INCOMPATIBLE,
-    @SerialName("embedded") EMBEDDED
+    @SerialName("required")
+    REQUIRED,
+
+    @SerialName("optional")
+    OPTIONAL,
+
+    @SerialName("incompatible")
+    INCOMPATIBLE,
+
+    @SerialName("embedded")
+    EMBEDDED
 }
