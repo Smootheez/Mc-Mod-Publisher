@@ -12,7 +12,7 @@ data class CurseforgeMetadata(
     val displayName: String? = null,
     val parentFileID: String? = null,
     val gameVersions: List<String>,
-    val releaseType: ReleaseType,
+    val releaseType: ReleaseType = ReleaseType.RELEASE, //
     val isMarkedForManualRelease: Boolean = true,
     val relations: Projects
 )

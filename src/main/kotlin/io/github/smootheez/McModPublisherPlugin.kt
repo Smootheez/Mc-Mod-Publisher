@@ -5,6 +5,8 @@ import org.gradle.api.Project
 
 class McModPublisherPlugin: Plugin<Project> {
     override fun apply(target: Project) {
+        target.extensions.create("mcModPublisher", McModPublisherExtension::class.java)
+
         target.tasks.register("publishModToAll") {
             group = "minecraft"
             description = "Publishes your Minecraft mod to a remote repository (placeholder)"
