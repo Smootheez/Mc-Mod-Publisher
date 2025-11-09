@@ -1,6 +1,6 @@
 package io.github.smootheez.modrinth
 
-import io.github.smootheez.core.ReleaseType
+import io.github.smootheez.LoaderType
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -10,7 +10,7 @@ data class ModrinthMetadata(
     val projectId: String,
 
     @SerialName("name")
-    val name: String,
+    val name: String? = null,
 
     @SerialName("version_number")
     val versionNumber: String,
@@ -22,66 +22,31 @@ data class ModrinthMetadata(
     val gameVersions: List<String>,
 
     @SerialName("loaders")
-    val loaders: List<String>,
+    val loaders: List<LoaderType>,
 
-    @SerialName("version_type")
-    val versionType: ReleaseType = ReleaseType.RELEASE, // default to RELEASE, which is the most common case
+    @SerialName("release_channel")
+    val releaseChannel: String, // default to RELEASE, which is the most common case
 
     @SerialName("dependencies")
     val dependencies: List<DependencyMetadata> = emptyList(),
 
     @SerialName("featured")
-    val featured: Boolean = true,
+    val featured: Boolean,
 
     // a new version, Modrinth defaults status to "listed". nullable with defaults to simplify upload calls
     @SerialName("status")
-    val status: Status? = null,
+    val status: String = "listed",
 
-    @SerialName("requested_status")
-    val requestedStatus: Status? = null,
+    @SerialName("file_parts")
+    val fileParts: List<String>
 )
-
-@Serializable
-enum class Status {
-    @SerialName("listed")
-    LISTED,
-
-    @SerialName("archived")
-    ARCHIVED,
-
-    @SerialName("draft")
-    DRAFT,
-
-    @SerialName("unlisted")
-    UNLISTED,
-
-    @SerialName("scheduled")
-    SCHEDULED
-}
 
 @Serializable
 data class DependencyMetadata(
-    @SerialName("version_id")
-    val versionId: String? = null,
     @SerialName("project_id")
-    val projectId: String? = null,
-    @SerialName("file_name")
-    val fileName: String? = null,
+    val projectId: String?,
+
     @SerialName("dependency_type")
-    val dependencyType: DependencyType = DependencyType.REQUIRED
+    val dependencyType: DependencyType
 )
 
-@Serializable
-enum class DependencyType {
-    @SerialName("required")
-    REQUIRED,
-
-    @SerialName("optional")
-    OPTIONAL,
-
-    @SerialName("incompatible")
-    INCOMPATIBLE,
-
-    @SerialName("embedded")
-    EMBEDDED
-}

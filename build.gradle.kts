@@ -11,9 +11,13 @@ repositories {
     mavenCentral()
 }
 
+val kotlinSerializationVersion = "1.9.0"
+val okhttpVersion = "5.2.1"
+
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlinSerializationVersion}")
+    implementation("com.squareup.okhttp3:okhttp:${okhttpVersion}")
 }
 
 tasks.test {

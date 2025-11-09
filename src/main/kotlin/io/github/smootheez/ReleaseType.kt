@@ -1,4 +1,4 @@
-package io.github.smootheez.core
+package io.github.smootheez
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

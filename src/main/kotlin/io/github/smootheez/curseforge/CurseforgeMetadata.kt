@@ -1,58 +1,28 @@
 package io.github.smootheez.curseforge
 
-import io.github.smootheez.core.ReleaseType
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class CurseforgeMetadata(
-    val projectId: String,
-    val changelog: String? = null,
-    val changelogType: ChangelogType? = null,
+//    val projectId: String, not include the project id because project id is requested by parameter
+    val changelog: String,
+    val changelogType: ChangelogType,
     val displayName: String? = null,
-    val parentFileID: String? = null,
-    val gameVersions: List<String>,
-    val releaseType: ReleaseType = ReleaseType.RELEASE, //
-    val isMarkedForManualRelease: Boolean = true,
+//    val parentFileID: String? = null, don't need parentID
+    val gameVersions: List<Int>,
+    val releaseType: String, //
+    val isMarkedForManualRelease: Boolean,
     val relations: Projects
 )
 
+@Serializable
 data class Projects(
     val projects: List<ProjectsMetadata> = emptyList()
 )
 
+@Serializable
 data class ProjectsMetadata(
-    val slug: String? = null,
-    val projectID: String? = null,
+    val projectID: Int?,
     val relationType: RelationType
 )
 
-@Serializable
-enum class RelationType {
-    @SerialName("embeddedLibrary")
-    EMBEDDED_LIBRARY,
-
-    @SerialName("incompatible")
-    INCOMPATIBLE,
-
-    @SerialName("optionalDependency")
-    OPTIONAL_DEPENDENCY,
-
-    @SerialName("requiredDependency")
-    REQUIRED_DEPENDENCY,
-
-    @SerialName("tool")
-    TOOL
-}
-
-@Serializable
-enum class ChangelogType {
-    @SerialName("text")
-    TEXT,
-
-    @SerialName("markdown")
-    MARKDOWN,
-
-    @SerialName("html")
-    HTML
-}
