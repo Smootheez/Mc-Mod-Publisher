@@ -39,7 +39,7 @@ class ModrinthPublisher(
     fun publish() {
         val modrinth = extension.modrinth
         val token = modrinth.token?.trim()
-        val projectId = modrinth.projectId
+        val projectId = modrinth.projectId?.trim()
         val files = extension.files.files
 
         project.logger.lifecycle("🚀  Publishing to Modrinth...")
@@ -105,7 +105,7 @@ class ModrinthPublisher(
 
         // Metadata sent as JSON in the multipart request
         val metadata = ModrinthMetadata(
-            projectId = projectId!!.trim(),
+            projectId = projectId!!,
             name = extension.displayName,
             versionNumber = extension.version ?: project.version.toString(),
             changelog = extension.changelog,
@@ -123,14 +123,14 @@ class ModrinthPublisher(
 
         project.logger.lifecycle("⏳ Uploading to Modrinth...")
 
-        publishingToModrinth(jsonMetadata, files, filePartNames, token)
+        publishingToModrinth(jsonMetadata, files, filePartNames, token!!)
     }
 
     private fun publishingToModrinth(
         jsonMetadata: String,
         files: Set<File>,
         filePartNames: List<String>,
-        token: String?
+        token: String
     ) {
         val multipartBuilder = MultipartBody.Builder().setType(MultipartBody.FORM)
         multipartBuilder.addFormDataPart(
@@ -155,7 +155,7 @@ class ModrinthPublisher(
             val request = Request.Builder()
                 .url(UPLOAD_URL)
                 .addHeader("User-Agent", PublisherConfig.USER_AGENT)
-                .addHeader("Authorization", token!!)
+                .addHeader("Authorization", token)
                 .post(requestBody)
                 .build()
 
