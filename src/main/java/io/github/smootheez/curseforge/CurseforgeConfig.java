@@ -16,11 +16,10 @@ public class CurseforgeConfig extends PublisherConfig<CurseforgeDependency, Inte
     private boolean manualRelease = false;
 
     private static final String CURSEFORGE =  "curseforge-";
-    private final NamedDomainObjectContainer<CurseforgeDependency> dependencies;
 
     @Inject
     public CurseforgeConfig(ObjectFactory objects) {
-        this.dependencies = objects.domainObjectContainer(CurseforgeDependency.class);
+        super(objects, CurseforgeDependency.class);
     }
 
     @Override

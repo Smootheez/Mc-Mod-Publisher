@@ -2,12 +2,18 @@ package io.github.smootheez;
 
 import lombok.*;
 import org.gradle.api.*;
+import org.gradle.api.model.*;
 
 @Getter
 @Setter
 public abstract class PublisherConfig<T, S> {
     private String token; // Required
     private String projectId; // Required
+    protected final NamedDomainObjectContainer<T> dependencies;
+
+    protected PublisherConfig(ObjectFactory objects, Class<T> dependencyType) {
+        this.dependencies = objects.domainObjectContainer(dependencyType);
+    }
 
     public abstract void dependencies(Action<NamedDomainObjectContainer<T>> action);
 

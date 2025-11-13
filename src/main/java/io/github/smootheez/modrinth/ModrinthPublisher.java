@@ -1,10 +1,8 @@
 package io.github.smootheez.modrinth;
 
-import com.google.gson.*;
 import com.google.gson.reflect.*;
 import io.github.smootheez.*;
 import io.github.smootheez.exception.*;
-import lombok.*;
 import lombok.extern.slf4j.*;
 import okhttp3.*;
 import org.gradle.api.*;
@@ -14,7 +12,7 @@ import java.util.*;
 import java.util.stream.*;
 
 @Slf4j
-public class ModrinthPublisher extends McModPublisher {
+public class ModrinthPublisher extends Publisher {
     private static final String UPLOAD_URL = "https://api.modrinth.com/v2/version";
     private static final String GAME_VERSION_URL = "https://api.modrinth.com/v2/tag/game_version";
 
@@ -28,6 +26,11 @@ public class ModrinthPublisher extends McModPublisher {
         var token = modrinth.getToken().trim();
         var projectId = modrinth.getProjectId().trim();
         var files = extension.getFiles();
+
+        if (!files.getFiles().iterator().hasNext()) {
+            project.getLogger().error("No files found. Please check your configuration.");
+            return;
+        }
 
         var dependecyList = modrinth.getDependencies().stream().map(
                 dep -> DependencyMetadata.builder()
@@ -44,29 +47,17 @@ public class ModrinthPublisher extends McModPublisher {
             return;
         }
 
-        String releaseType = extension.getReleaseType();
+        var releaseType = extension.getReleaseType();
         if (!Constants.VALID_RELEASE_TYPE.contains(releaseType)) {
             project.getLogger().error("Invalid release type. Please check your configuration.");
             return;
         }
 
-        List<String> filePartNames = IntStream.range(0, files.getFiles().size())
+        var filePartNames = IntStream.range(0, files.getFiles().size())
                 .mapToObj(i -> i == 0 ? "file" : "file_" + i)
                 .toList();
 
-        var metadata = ModrinthMetadata.builder()
-                .projectId(projectId)
-                .name(extension.getDisplayName())
-                .versionNumber(extension.getVersion())
-                .changelog(extension.getChangelog())
-                .gameVersions(validGameVersions)
-                .loaders(extension.getLoaders())
-                .releaseChannel(releaseType)
-                .featured(modrinth.isFeatured())
-                .status(modrinth.getStatus())
-                .dependencies(dependecyList)
-                .fileParts(filePartNames)
-                .build();
+        var metadata = buildMetadata(projectId, validGameVersions, releaseType, modrinth, dependecyList, filePartNames);
 
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
         multipartBuilder.addFormDataPart(Constants.METADATA,
@@ -90,7 +81,7 @@ public class ModrinthPublisher extends McModPublisher {
                 .post(requestBody)
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
+        try (var response = client.newCall(request).execute()) {
             if (!response.isSuccessful())
                 throw new FailedFileUploadException("Failed to upload mod to Modrinth: " + response.code() + " - " + response.message());
 
@@ -100,17 +91,33 @@ public class ModrinthPublisher extends McModPublisher {
         }
     }
 
+    private ModrinthMetadata buildMetadata(String projectId, List<String> validGameVersions, String releaseType, ModrinthConfig modrinth, List<DependencyMetadata> dependecyList, List<String> filePartNames) {
+        return ModrinthMetadata.builder()
+                .projectId(projectId)
+                .name(extension.getDisplayName())
+                .versionNumber(extension.getVersion())
+                .changelog(extension.getChangelog())
+                .gameVersions(validGameVersions)
+                .loaders(extension.getLoaders())
+                .releaseChannel(releaseType)
+                .featured(modrinth.isFeatured())
+                .status(modrinth.getStatus())
+                .dependencies(dependecyList)
+                .fileParts(filePartNames)
+                .build();
+    }
+
     List<GameVersionTag> fetchGameVersions() {
         var request = new Request.Builder()
                 .url(GAME_VERSION_URL)
                 .get()
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
+        try (var response = client.newCall(request).execute()) {
             if (!response.isSuccessful())
                 throw new FailedFetchGameVersionsException("Failed to fetch game versions: " + response.code() + " - " + response.message());
 
-            String responseBody = response.body().string();
+            var responseBody = response.body().string();
             return GSON.fromJson(responseBody, new TypeToken<List<GameVersionTag>>() {
             }.getType());
         } catch (IOException e) {

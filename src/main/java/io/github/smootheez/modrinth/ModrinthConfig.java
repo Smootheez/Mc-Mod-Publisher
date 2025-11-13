@@ -11,14 +11,12 @@ import javax.inject.*;
 @Setter
 public class ModrinthConfig extends PublisherConfig<ModrinthDependency, String> {
     private boolean featured = true;
-    private String status = "listed";
+    private String status = "listed"; // TODO: add validation
 
     private static final String MODRINTH = "modrinth-";
-    private final NamedDomainObjectContainer<ModrinthDependency> dependencies;
 
-    @Inject
-    public ModrinthConfig(ObjectFactory objects) {
-        this.dependencies = objects.domainObjectContainer(ModrinthDependency.class);
+    protected ModrinthConfig(ObjectFactory objects) {
+        super(objects, ModrinthDependency.class);
     }
 
     @Override

@@ -6,7 +6,7 @@ import okhttp3.*;
 import org.gradle.api.*;
 
 @RequiredArgsConstructor
-public abstract class McModPublisher {
+public abstract class Publisher {
     protected final Project project;
     protected final McModPublisherExtension extension;
     protected final OkHttpClient client;

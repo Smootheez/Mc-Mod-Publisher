@@ -9,7 +9,7 @@ import org.gradle.api.*;
 import java.io.*;
 import java.util.*;
 
-public class CurseforgePublisher extends McModPublisher {
+public class CurseforgePublisher extends Publisher {
     private static final String UPLOAD_URL = "https://minecraft.curseforge.com/api/projects/%s/upload-file";
     private static final String GAME_VERSIONS_URL = "https://minecraft.curseforge.com/api/api/game/versions";
 
@@ -22,7 +22,14 @@ public class CurseforgePublisher extends McModPublisher {
         var curseforge = extension.getCurseforge();
         var token = curseforge.getToken().trim();
         var projectId = curseforge.getProjectId().trim();
-        var file = extension.getFiles().getFiles().iterator().next();
+        var iterator = extension.getFiles().getFiles().iterator();
+
+        if (!iterator.hasNext()) {
+            project.getLogger().error("No files found. Please check your configuration.");
+            return;
+        }
+
+        var file = iterator.next();
 
         var validGameVersions = fetchGameVersions().stream()
                 .filter(gameVersionTag -> extension.getGameVersions().contains(gameVersionTag.name()))
@@ -41,15 +48,7 @@ public class CurseforgePublisher extends McModPublisher {
                         .build()
         ).toList();
 
-        var metadata = CurseforgeMetadata.builder()
-                .changelog(extension.getChangelog())
-                .changelogType(curseforge.getChangelogType())
-                .displayName(extension.getDisplayName())
-                .gameVersions(validGameVersions)
-                .releaseType(extension.getReleaseType())
-                .isMarkedForManualRelease(curseforge.isManualRelease())
-                .relations(new Projects(dependencyList))
-                .build();
+        var metadata = buildMetadata(curseforge, validGameVersions, dependencyList);
 
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
         multipartBuilder.addFormDataPart(Constants.METADATA,
@@ -71,7 +70,7 @@ public class CurseforgePublisher extends McModPublisher {
                 .post(requestBody)
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
+        try (var response = client.newCall(request).execute()) {
             if (!response.isSuccessful())
                 throw new FailedFileUploadException("Failed to upload mod to Curseforge: " + response.code() + " - " + response.message());
 
@@ -81,17 +80,29 @@ public class CurseforgePublisher extends McModPublisher {
         }
     }
 
+    private CurseforgeMetadata buildMetadata(CurseforgeConfig curseforge, List<Integer> validGameVersions, List<ProjectsMetadata> dependencyList) {
+        return CurseforgeMetadata.builder()
+                .changelog(extension.getChangelog())
+                .changelogType(curseforge.getChangelogType())
+                .displayName(extension.getDisplayName())
+                .gameVersions(validGameVersions)
+                .releaseType(extension.getReleaseType())
+                .isMarkedForManualRelease(curseforge.isManualRelease())
+                .relations(new Projects(dependencyList))
+                .build();
+    }
+
     List<GameVersionTag> fetchGameVersions() {
         var request = new Request.Builder()
                 .url(GAME_VERSIONS_URL)
                 .get()
                 .build();
 
-        try (Response response = client.newCall(request).execute()) {
+        try (var response = client.newCall(request).execute()) {
             if (!response.isSuccessful())
                 throw new FailedFetchGameVersionsException("Failed to fetch game versions: " + response.code() + " - " + response.message());
 
-            String responseBody = response.body().string();
+            var responseBody = response.body().string();
             return GSON.fromJson(responseBody, new TypeToken<List<GameVersionTag>>() {
             }.getType());
         } catch (IOException e) {
