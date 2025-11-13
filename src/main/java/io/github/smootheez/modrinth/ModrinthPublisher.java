@@ -6,6 +6,7 @@ import io.github.smootheez.exception.*;
 import lombok.extern.slf4j.*;
 import okhttp3.*;
 import org.gradle.api.*;
+import org.gradle.api.file.*;
 
 import java.io.*;
 import java.util.*;
@@ -26,11 +27,6 @@ public class ModrinthPublisher extends Publisher {
         var token = modrinth.getToken().trim();
         var projectId = modrinth.getProjectId().trim();
         var files = extension.getFiles();
-
-        if (!files.getFiles().iterator().hasNext()) {
-            project.getLogger().error("No files found. Please check your configuration.");
-            return;
-        }
 
         var dependecyList = modrinth.getDependencies().stream().map(
                 dep -> DependencyMetadata.builder()
@@ -57,8 +53,11 @@ public class ModrinthPublisher extends Publisher {
                 .mapToObj(i -> i == 0 ? "file" : "file_" + i)
                 .toList();
 
-        var metadata = buildMetadata(projectId, validGameVersions, releaseType, modrinth, dependecyList, filePartNames);
+        var metadata = modrinthMetadata(projectId, validGameVersions, releaseType, modrinth, dependecyList, filePartNames);
+        publishingToModrinth(metadata, files, filePartNames, token);
+    }
 
+    private void publishingToModrinth(ModrinthMetadata metadata, ConfigurableFileCollection files, List<String> filePartNames, String token) {
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
         multipartBuilder.addFormDataPart(Constants.METADATA,
                 null,
@@ -91,7 +90,7 @@ public class ModrinthPublisher extends Publisher {
         }
     }
 
-    private ModrinthMetadata buildMetadata(String projectId, List<String> validGameVersions, String releaseType, ModrinthConfig modrinth, List<DependencyMetadata> dependecyList, List<String> filePartNames) {
+    private ModrinthMetadata modrinthMetadata(String projectId, List<String> validGameVersions, String releaseType, ModrinthConfig modrinth, List<DependencyMetadata> dependecyList, List<String> filePartNames) {
         return ModrinthMetadata.builder()
                 .projectId(projectId)
                 .name(extension.getDisplayName())
@@ -107,7 +106,7 @@ public class ModrinthPublisher extends Publisher {
                 .build();
     }
 
-    List<GameVersionTag> fetchGameVersions() {
+    private List<GameVersionTag> fetchGameVersions() {
         var request = new Request.Builder()
                 .url(GAME_VERSION_URL)
                 .get()

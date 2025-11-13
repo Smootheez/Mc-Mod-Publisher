@@ -24,13 +24,6 @@ public class CurseforgePublisher extends Publisher {
         var projectId = curseforge.getProjectId().trim();
         var iterator = extension.getFiles().getFiles().iterator();
 
-        if (!iterator.hasNext()) {
-            project.getLogger().error("No files found. Please check your configuration.");
-            return;
-        }
-
-        var file = iterator.next();
-
         var validGameVersions = fetchGameVersions().stream()
                 .filter(gameVersionTag -> extension.getGameVersions().contains(gameVersionTag.name()))
                 .map(GameVersionTag::id)
@@ -48,14 +41,18 @@ public class CurseforgePublisher extends Publisher {
                         .build()
         ).toList();
 
-        var metadata = buildMetadata(curseforge, validGameVersions, dependencyList);
+        var metadata = curseforgeMetadata(curseforge, validGameVersions, dependencyList);
+        publishinToCurseforge(metadata, iterator, projectId, token);
+    }
 
+    private void publishinToCurseforge(CurseforgeMetadata metadata, Iterator<File> iterator, String projectId, String token) {
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
         multipartBuilder.addFormDataPart(Constants.METADATA,
                 null,
                 RequestBody.create(GSON.toJson(metadata), MediaType.parse(Constants.MEDIA_TYPE_JSON))
         );
 
+        var file = iterator.next();
         multipartBuilder.addFormDataPart(
                 "file",
                 file.getName(),
@@ -80,7 +77,7 @@ public class CurseforgePublisher extends Publisher {
         }
     }
 
-    private CurseforgeMetadata buildMetadata(CurseforgeConfig curseforge, List<Integer> validGameVersions, List<ProjectsMetadata> dependencyList) {
+    private CurseforgeMetadata curseforgeMetadata(CurseforgeConfig curseforge, List<Integer> validGameVersions, List<ProjectsMetadata> dependencyList) {
         return CurseforgeMetadata.builder()
                 .changelog(extension.getChangelog())
                 .changelogType(curseforge.getChangelogType())
@@ -92,7 +89,7 @@ public class CurseforgePublisher extends Publisher {
                 .build();
     }
 
-    List<GameVersionTag> fetchGameVersions() {
+    private List<GameVersionTag> fetchGameVersions() {
         var request = new Request.Builder()
                 .url(GAME_VERSIONS_URL)
                 .get()
