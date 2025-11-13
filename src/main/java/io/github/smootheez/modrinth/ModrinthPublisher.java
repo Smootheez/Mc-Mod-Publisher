@@ -16,6 +16,7 @@ import java.util.stream.*;
 public class ModrinthPublisher extends Publisher {
     private static final String UPLOAD_URL = "https://api.modrinth.com/v2/version";
     private static final String GAME_VERSION_URL = "https://api.modrinth.com/v2/tag/game_version";
+    private static final Set<String> VALID_STATUS = Set.of("listed", "archived", "draft", "unlisted", "scheduled");
 
     public ModrinthPublisher(Project project, McModPublisherExtension extension, OkHttpClient client) {
         super(project, extension, client);
@@ -46,6 +47,11 @@ public class ModrinthPublisher extends Publisher {
         var releaseType = extension.getReleaseType();
         if (!Constants.VALID_RELEASE_TYPE.contains(releaseType)) {
             project.getLogger().error("Invalid release type. Please check your configuration.");
+            return;
+        }
+
+        if (!VALID_STATUS.contains(modrinth.getStatus())) {
+            project.getLogger().error("Invalid status. Please check your configuration.");
             return;
         }
 
