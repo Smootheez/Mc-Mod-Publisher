@@ -1,4 +1,69 @@
-# The project is still under development...
+# 📦 Minecraft Mod Publisher — Configuration Overview
+
+This plugin provides a unified Gradle DSL for publishing Minecraft mods to **CurseForge** and **Modrinth**.
+Below is a complete reference for all configuration parameters.
+
+---
+
+## 📘 Configuration Reference
+
+### General Settings
+
+| Parameter      | Value / Example                | Required | Description                                                        |
+|----------------|--------------------------------|----------|--------------------------------------------------------------------|
+| `displayName`  | Smooth Expansion v1.2.0        | Optional | Friendly name shown on platforms. Defaults to the output filename. |
+| `version`      | 1.2.0                          | **Yes**  | Version number for the upload.                                     |
+| `releaseType`  | release                        | Optional | Release channel (`release`, `beta`, `alpha`).                      |
+| `changelog`    | Reads from `CHANGELOG.md`      | Optional | Changelog text; empty string if not provided.                      |
+| `files`        | Output of `jar` task           | **Yes**  | Files to upload (normally your compiled JAR).                      |
+| `gameVersions` | 1.20.1, 1.19.4                 | **Yes**  | Minecraft versions supported by this release.                      |
+| `loaders`      | Forge, NeoForge, Fabric, Quilt | **Yes**  | Mod loaders supported by the build.                                |
+
+---
+
+### 🔶 CurseForge Configuration
+
+| Parameter         | Value / Example  | Required | Description                                            |
+|-------------------|------------------|----------|--------------------------------------------------------|
+| `token`           | curseforge-token | **Yes**  | API token (store in environment variables for safety). |
+| `projectId`       | 123456           | **Yes**  | Your CurseForge project ID.                            |
+| `changelogType`   | MARKDOWN         | Optional | Format of the changelog text.                          |
+| `environmentType` | Client, Server   | Optional | Target environments supported by your mod.             |
+| `isManualRelease` | false            | Optional | If true, the upload requires manual approval.          |
+
+#### CurseForge Dependencies
+
+| Type           | Example ID | Description                            |
+|----------------|------------|----------------------------------------|
+| `required`     | 123456     | Hard dependencies required at runtime. |
+| `optional`     | 789012     | Optional enhancements.                 |
+| `incompatible` | 345678     | Known incompatible mods.               |
+| `embedded`     | 901234     | Dependencies packaged inside your mod. |
+| `tool`         | 567890     | Tools or helper libraries.             |
+
+---
+
+### 🟩 Modrinth Configuration
+
+| Parameter    | Value / Example | Required | Description                                                             |
+|--------------|-----------------|----------|-------------------------------------------------------------------------|
+| `token`      | modrinth-token  | **Yes**  | API token (should be stored as an environment variable).                |
+| `projectId`  | abcd1234        | **Yes**  | Your Modrinth project ID.                                               |
+| `isFeatured` | true            | Optional | Marks this version as featured on Modrinth.                             |
+| `status`     | listed          | Optional | Listing state (`listed`, `archived`, `draft`, `unlisted`, `scheduled`). |
+
+#### Modrinth Dependencies
+
+| Type           | Example ID | Description                                   |
+|----------------|------------|-----------------------------------------------|
+| `required`     | P7dR8mSH   | Required runtime dependencies.                |
+| `optional`     | 4Kc3yK8M   | Optional or recommended mods.                 |
+| `incompatible` | ET0f402o   | Mods that cannot be used with this mod.       |
+| `embedded`     | AANQXDDX   | Libraries bundled directly inside your build. |
+
+---
+
+# 🧩 Example Configuration
 
 ```kotlin
 mcModPublisher {
@@ -90,5 +155,4 @@ mcModPublisher {
         }
     }
 }
-
 ```
