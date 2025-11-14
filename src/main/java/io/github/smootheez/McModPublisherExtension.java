@@ -5,6 +5,7 @@ import io.github.smootheez.modrinth.*;
 import lombok.*;
 import org.gradle.api.*;
 import org.gradle.api.file.*;
+import org.gradle.api.model.*;
 
 import javax.annotation.*;
 import javax.inject.*;
@@ -28,10 +29,10 @@ public class McModPublisherExtension {
     private final ModrinthConfig modrinth;
 
     @Inject
-    public McModPublisherExtension(ConfigurableFileCollection files, CurseforgeConfig curseforge, ModrinthConfig modrinth) {
-        this.files = files;
-        this.curseforge = curseforge;
-        this.modrinth = modrinth;
+    public McModPublisherExtension(Project project, ObjectFactory objects) {
+        this.files = project.files();
+        this.curseforge = objects.newInstance(CurseforgeConfig.class, objects);
+        this.modrinth = objects.newInstance(ModrinthConfig.class, objects);
     }
 
     public void modrinth(Action<ModrinthConfig> action) {

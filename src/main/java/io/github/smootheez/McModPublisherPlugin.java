@@ -10,7 +10,6 @@ public class McModPublisherPlugin implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getLogger().lifecycle("Hello World");
         var extension = project.getExtensions().create("mcModPublisher", McModPublisherExtension.class);
 
         var client = new OkHttpClient.Builder().callTimeout(Constants.TIMEOUT).build();
