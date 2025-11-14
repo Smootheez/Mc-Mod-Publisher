@@ -1,5 +1,9 @@
 # 📦 Minecraft Mod Publisher — Configuration Overview
 
+**Note:** This project is currently in early development and has not yet been tested in production environments.
+
+---
+
 This plugin provides a unified Gradle DSL for publishing Minecraft mods to **CurseForge** and **Modrinth**.
 Below is a complete reference for all configuration parameters.
 
@@ -155,4 +159,61 @@ mcModPublisher {
         }
     }
 }
+```
+
+---
+
+## 🚀 Installation Guide
+
+1. **Clone this repository** at the same directory level as the project where you want to use the plugin:
+
+   ```bash
+   git clone https://github.com/Smootheez/Mc-Mod-Publisher.git
+   ```
+
+2. **Register the plugin** in your root project settings via a composite build.
+
+    ### **Kotlin DSL — `settings.gradle.kts`**
+
+    ```kotlin
+    pluginManagement {
+        includeBuild("../Mc-Mod-Publisher")
+    }
+    ```
+
+    ### **Groovy DSL — `settings.gradle`**
+
+    ```groovy
+    pluginManagement {
+        includeBuild("../Mc-Mod-Publisher")
+    }
+    ```
+
+3. **Apply the plugin** in your project’s build script.
+
+    ### **Kotlin DSL — `build.gradle.kts`**
+
+    ```kotlin
+    plugins {
+        id("io.github.smootheez.mc-mod-publisher")
+    }
+    ```
+
+    ### **Groovy DSL — `build.gradle`**
+
+    ```groovy
+    plugins {
+        id 'io.github.smootheez.mc-mod-publisher'
+    }
+    ```
+
+---
+
+## 🧪 Available Commands
+
+Run the publishing tasks with:
+
+```bash
+./gradlew publishModToModrinth
+./gradlew publishModToCurseforge
 ```
