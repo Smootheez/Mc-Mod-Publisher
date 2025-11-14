@@ -11,7 +11,7 @@ import java.util.*;
 @Getter
 @Setter
 public class CurseforgeConfig extends PublisherConfig<CurseforgeDependency, Integer> {
-    private ChangelogType changelogType;
+    private ChangelogType changelogType = ChangelogType.MARKDOWN;
     private List<EnvironmentType> environmentType = List.of(EnvironmentType.CLIENT, EnvironmentType.SERVER);
     private boolean manualRelease = false;
 
