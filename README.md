@@ -209,11 +209,6 @@ mcModPublisher {
 
 ---
 
-Here’s a clear and practical example of how your directory structure **should be arranged** when using the plugin via composite build.
-This layout prevents path issues and ensures Gradle detects the plugin correctly.
-
----
-
 # 📁 Recommended Project Layout
 
 ```
@@ -230,46 +225,6 @@ This layout prevents path issues and ensures Gradle detects the plugin correctly
 ```
 
 Both folders should sit **side-by-side** in the same parent directory, commonly your development workspace.
-
----
-
-# ⚙️ Example: settings file inside your mod project
-
-### **Kotlin DSL — `MyMinecraftMod/settings.gradle.kts`**
-
-```kotlin
-pluginManagement {
-    includeBuild("../Mc-Mod-Publisher")
-}
-```
-
-### **Groovy DSL — `MyMinecraftMod/settings.gradle`**
-
-```groovy
-pluginManagement {
-    includeBuild("../Mc-Mod-Publisher")
-}
-```
-
----
-
-# 🔌 Applying the Plugin in Your Mod Project
-
-### **Kotlin DSL — `build.gradle.kts`**
-
-```kotlin
-plugins {
-    id("io.github.smootheez.mc-mod-publisher")
-}
-```
-
-### **Groovy DSL — `build.gradle`**
-
-```groovy
-plugins {
-    id 'io.github.smootheez.mc-mod-publisher'
-}
-```
 
 ---
 
