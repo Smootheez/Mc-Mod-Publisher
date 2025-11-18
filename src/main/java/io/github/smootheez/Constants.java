@@ -13,4 +13,5 @@ public class Constants {
     public static final Set<String> VALID_RELEASE_TYPE = Set.of("release", "beta", "alpha");
     public static final Duration TIMEOUT = Duration.ofSeconds(20);
     public static final String DATA = "data";
+    public static final String METADATA = "metadata";
 }

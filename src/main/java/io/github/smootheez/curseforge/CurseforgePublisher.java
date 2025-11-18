@@ -33,11 +33,18 @@ public class CurseforgePublisher extends Publisher {
                 .map(this::mapEnvironmentToCF)
                 .toList();
 
-        var validGameVersions = fetchGameVersions().stream()
+        var validGameVersions = fetchGameVersions(token).stream()
+                .filter(tag -> {
+                    var type = tag.gameVersionTypeId();
+
+                    return type == 77784   // Minecraft versions
+                            || type == 68441   // Loaders
+                            || type == 75208;  // Client/Server
+                })
                 .filter(tag ->
-                        desiredMcVersions.contains(tag.name()) ||
-                                desiredLoaders.contains(tag.name()) ||
-                                desiredEnvs.contains(tag.name())
+                        desiredMcVersions.contains(tag.name())
+                                || desiredLoaders.contains(tag.name())
+                                || desiredEnvs.contains(tag.name())
                 )
                 .map(GameVersionTag::id)
                 .toList();
@@ -79,7 +86,7 @@ public class CurseforgePublisher extends Publisher {
 
     private void publishingToCurseforge(CurseforgeMetadata metadata, Iterator<File> iterator, String projectId, String token) {
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-        multipartBuilder.addFormDataPart(Constants.DATA,
+        multipartBuilder.addFormDataPart(Constants.METADATA,
                 null,
                 RequestBody.create(GSON.toJson(metadata), MediaType.parse(Constants.MEDIA_TYPE_JSON))
         );
@@ -94,7 +101,7 @@ public class CurseforgePublisher extends Publisher {
         var requestBody = multipartBuilder.build();
         var request = new Request.Builder()
                 .url(String.format(UPLOAD_URL, projectId))
-                .header("X-Api-Key", token)
+                .header("X-Api-Token", token)
                 .header("User-Agent", Constants.USER_AGENT)
                 .post(requestBody)
                 .build();
@@ -117,29 +124,36 @@ public class CurseforgePublisher extends Publisher {
         }    }
 
     private CurseforgeMetadata curseforgeMetadata(CurseforgeConfig curseforge, List<Integer> validGameVersions, List<ProjectsMetadata> dependencyList) {
-        return CurseforgeMetadata.builder()
+        var builder = CurseforgeMetadata.builder()
                 .changelog(extension.getChangelog())
                 .changelogType(curseforge.getChangelogType())
                 .displayName(extension.getDisplayName())
                 .gameVersions(validGameVersions)
                 .releaseType(extension.getReleaseType())
-                .isMarkedForManualRelease(curseforge.isManualRelease())
-                .relations(new Projects(dependencyList))
-                .build();
+                .isMarkedForManualRelease(curseforge.isManualRelease());
+
+        if (!dependencyList.isEmpty()) {
+            builder.relations(new Projects(dependencyList));
+        }
+
+        return builder.build();
     }
 
-    private List<GameVersionTag> fetchGameVersions() {
+    private List<GameVersionTag> fetchGameVersions(String token) {
         var request = new Request.Builder()
                 .url(GAME_VERSIONS_URL)
+                .header("X-Api-Token", token)
+                .header("User-Agent", Constants.USER_AGENT)
                 .get()
                 .build();
 
         try (var response = client.newCall(request).execute()) {
+            var body = response.body().string();
             if (!response.isSuccessful())
-                throw new FailedFetchGameVersionsException("Failed to fetch game versions: " + response.code() + " - " + response.message());
+                throw new FailedFetchGameVersionsException("Failed to fetch game versions: " +
+                        response.code() + " - " + response.message() + " - BODY: " + body);
 
-            var responseBody = response.body().string();
-            return GSON.fromJson(responseBody, new TypeToken<List<GameVersionTag>>() {
+            return GSON.fromJson(body, new TypeToken<List<GameVersionTag>>() {
             }.getType());
         } catch (IOException e) {
             throw new FailedFetchGameVersionsException("Failed to fetch game versions" + e.getMessage());
