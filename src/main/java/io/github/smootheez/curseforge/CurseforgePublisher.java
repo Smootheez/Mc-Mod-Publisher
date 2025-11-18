@@ -11,7 +11,7 @@ import java.util.*;
 
 public class CurseforgePublisher extends Publisher {
     private static final String UPLOAD_URL = "https://minecraft.curseforge.com/api/projects/%s/upload-file";
-    private static final String GAME_VERSIONS_URL = "https://minecraft.curseforge.com/api/api/game/versions";
+    private static final String GAME_VERSIONS_URL = "https://minecraft.curseforge.com/api/game/versions";
 
     public CurseforgePublisher(Project project, McModPublisherExtension extension, OkHttpClient client) {
         super(project, extension, client);
@@ -55,6 +55,9 @@ public class CurseforgePublisher extends Publisher {
         ).toList();
 
         var metadata = curseforgeMetadata(curseforge, validGameVersions, dependencyList);
+        project.getLogger().lifecycle("Curseforge metadata: " + metadata);
+
+        project.getLogger().lifecycle("Publishing to Curseforge...");
         publishingToCurseforge(metadata, iterator, projectId, token);
     }
 
@@ -76,7 +79,7 @@ public class CurseforgePublisher extends Publisher {
 
     private void publishingToCurseforge(CurseforgeMetadata metadata, Iterator<File> iterator, String projectId, String token) {
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-        multipartBuilder.addFormDataPart(Constants.METADATA,
+        multipartBuilder.addFormDataPart(Constants.DATA,
                 null,
                 RequestBody.create(GSON.toJson(metadata), MediaType.parse(Constants.MEDIA_TYPE_JSON))
         );
@@ -97,14 +100,21 @@ public class CurseforgePublisher extends Publisher {
                 .build();
 
         try (var response = client.newCall(request).execute()) {
+            var body = response.body().string();
+            project.getLogger().lifecycle("Response received: code=" + response.code() + " message=" + response.message());
+            project.getLogger().lifecycle("Response body: " + body);
+
+
             if (!response.isSuccessful())
-                throw new FailedFileUploadException("Failed to upload mod to Curseforge: " + response.code() + " - " + response.message());
+                throw new FailedFileUploadException(
+                        "Failed to upload mod to Curseforge: " +
+                                response.code() + " - " + response.message() + " - BODY: " + body
+                );
 
             project.getLogger().lifecycle("Successfully uploaded mod to Curseforge!");
         } catch (IOException e) {
             throw new FailedFileUploadException("Failed to upload mod to Curseforge: " + e.getMessage());
-        }
-    }
+        }    }
 
     private CurseforgeMetadata curseforgeMetadata(CurseforgeConfig curseforge, List<Integer> validGameVersions, List<ProjectsMetadata> dependencyList) {
         return CurseforgeMetadata.builder()

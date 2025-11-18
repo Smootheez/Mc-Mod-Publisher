@@ -3,7 +3,6 @@ package io.github.smootheez.modrinth;
 import com.google.gson.reflect.*;
 import io.github.smootheez.*;
 import io.github.smootheez.exception.*;
-import lombok.extern.slf4j.*;
 import okhttp3.*;
 import org.gradle.api.*;
 import org.gradle.api.file.*;
@@ -12,7 +11,6 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.*;
 
-@Slf4j
 public class ModrinthPublisher extends Publisher {
     private static final String UPLOAD_URL = "https://api.modrinth.com/v2/version";
     private static final String GAME_VERSION_URL = "https://api.modrinth.com/v2/tag/game_version";
@@ -60,12 +58,15 @@ public class ModrinthPublisher extends Publisher {
                 .toList();
 
         var metadata = modrinthMetadata(projectId, validGameVersions, releaseType, modrinth, dependecyList, filePartNames);
+        project.getLogger().lifecycle("Metadata JSON: " + GSON.toJson(metadata));
+
+        project.getLogger().lifecycle("Publishing to Modrinth...");
         publishingToModrinth(metadata, files, filePartNames, token);
     }
 
     private void publishingToModrinth(ModrinthMetadata metadata, ConfigurableFileCollection files, List<String> filePartNames, String token) {
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-        multipartBuilder.addFormDataPart(Constants.METADATA,
+        multipartBuilder.addFormDataPart(Constants.DATA,
                 null,
                 RequestBody.create(GSON.toJson(metadata), MediaType.parse(Constants.MEDIA_TYPE_JSON))
         );
@@ -87,8 +88,17 @@ public class ModrinthPublisher extends Publisher {
                 .build();
 
         try (var response = client.newCall(request).execute()) {
-            if (!response.isSuccessful())
-                throw new FailedFileUploadException("Failed to upload mod to Modrinth: " + response.code() + " - " + response.message());
+            var body = response.body().string();
+
+            if (!response.isSuccessful()) {
+                project.getLogger().lifecycle("Upload failed. Response body: " + body);
+
+                throw new FailedFileUploadException(
+                        "Failed to upload mod to Modrinth: " +
+                                response.code() + " - " +
+                                response.message() + " - BODY: " + body
+                );
+            }
 
             project.getLogger().lifecycle("Successfully uploaded mod to Modrinth!");
         } catch (IOException e) {
