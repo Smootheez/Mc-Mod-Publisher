@@ -24,8 +24,21 @@ public class CurseforgePublisher extends Publisher {
         var projectId = curseforge.getProjectId().trim();
         var iterator = extension.getFiles().getFiles().iterator();
 
+        var desiredMcVersions = extension.getGameVersions(); // ["1.20.1"]
+        var desiredLoaders = extension.getLoaders().stream()
+                .map(this::mapLoaderToCF)
+                .toList();
+
+        var desiredEnvs = curseforge.getEnvironmentType().stream()
+                .map(this::mapEnvironmentToCF)
+                .toList();
+
         var validGameVersions = fetchGameVersions().stream()
-                .filter(gameVersionTag -> extension.getGameVersions().contains(gameVersionTag.name()))
+                .filter(tag ->
+                        desiredMcVersions.contains(tag.name()) ||
+                                desiredLoaders.contains(tag.name()) ||
+                                desiredEnvs.contains(tag.name())
+                )
                 .map(GameVersionTag::id)
                 .toList();
 
@@ -42,10 +55,26 @@ public class CurseforgePublisher extends Publisher {
         ).toList();
 
         var metadata = curseforgeMetadata(curseforge, validGameVersions, dependencyList);
-        publishinToCurseforge(metadata, iterator, projectId, token);
+        publishingToCurseforge(metadata, iterator, projectId, token);
     }
 
-    private void publishinToCurseforge(CurseforgeMetadata metadata, Iterator<File> iterator, String projectId, String token) {
+    private String mapLoaderToCF(LoaderType loader) {
+        return switch (loader) {
+            case FABRIC -> "Fabric";
+            case QUILT -> "Quilt";
+            case FORGE -> "Forge";
+            case NEOFORGE -> "NeoForge";
+        };
+    }
+
+    private String mapEnvironmentToCF(EnvironmentType env) {
+        return switch (env) {
+            case CLIENT -> "Client";
+            case SERVER -> "Server";
+        };
+    }
+
+    private void publishingToCurseforge(CurseforgeMetadata metadata, Iterator<File> iterator, String projectId, String token) {
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
         multipartBuilder.addFormDataPart(Constants.METADATA,
                 null,
