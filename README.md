@@ -233,6 +233,7 @@ Both folders should sit **side-by-side** in the same parent directory, commonly 
 Run from inside your mod project folder:
 
 ```bash
+./gradlew publishModToAll
 ./gradlew publishModToModrinth
 ./gradlew publishModToCurseforge
 ```
