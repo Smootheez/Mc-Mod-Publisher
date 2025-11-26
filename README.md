@@ -37,13 +37,13 @@ Below is a complete reference for all configuration parameters.
 
 #### CurseForge Dependencies
 
-| Type           | Example ID | Description                            |
-|----------------|------------|----------------------------------------|
-| `required`     | 123456     | Hard dependencies required at runtime. |
-| `optional`     | 789012     | Optional enhancements.                 |
-| `incompatible` | 345678     | Known incompatible mods.               |
-| `embedded`     | 901234     | Dependencies packaged inside your mod. |
-| `tool`         | 567890     | Tools or helper libraries.             |
+| Type           | Example Slug      | Description                            |
+|----------------|-------------------|----------------------------------------|
+| `required`     | required-slug     | Hard dependencies required at runtime. |
+| `optional`     | optional-slug     | Optional enhancements.                 |
+| `incompatible` | incompatible-slug | Known incompatible mods.               |
+| `embedded`     | embedded-slug     | Dependencies packaged inside your mod. |
+| `tool`         | tool-slug         | Tools or helper libraries.             |
 
 ---
 
@@ -113,19 +113,19 @@ mcModPublisher {
         // Dependency metadata for CurseForge.
         dependencies {
             // Hard requirements — the mod cannot run without these.
-            required(123456)
+            required("required-slug")
 
             // Optional mods that enhance or add extra features.
-            optional(789012)
+            optional("optional-slug")
 
             // Mods known to be incompatible with this one.
-            incompatible(345678)
+            incompatible("incompatible-slug")
 
             // Dependencies bundled inside your jar.
-            embedded(901234)
+            embedded("embedded-slug")
 
             // Tools, like libraries or development helpers.
-            tool(567890)
+            tool("tool-slug")
         }
     }
 

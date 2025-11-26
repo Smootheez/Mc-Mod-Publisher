@@ -13,6 +13,15 @@ public class McModPublisherPlugin implements Plugin<Project> {
         var extension = project.getExtensions().create("mcModPublisher", McModPublisherExtension.class);
 
         var client = new OkHttpClient.Builder().callTimeout(Constants.TIMEOUT).build();
+        project.getTasks().register("publishModToAll", task -> {
+            task.setGroup(PUBLISHER);
+            task.setDescription("Uploads the mod to all platforms");
+            task.doLast(t -> {
+                new ModrinthPublisher(project, extension, client).publish();
+                new CurseforgePublisher(project, extension, client).publish();
+            });
+        });
+
         project.getTasks().register("publishModToModrinth", task -> {
             task.setGroup(PUBLISHER);
             task.setDescription("Uploads the mod to Modrinth");
