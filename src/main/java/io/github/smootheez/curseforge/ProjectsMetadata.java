@@ -5,6 +5,6 @@ import lombok.*;
 
 // Equivalent to ProjectsMetadata
 @Builder
-public record ProjectsMetadata(@SerializedName("projectID") int projectId,
-                               RelationType relationType) {
+public record ProjectsMetadata(String slug,
+                               @SerializedName("type") RelationType relationType) {
 }

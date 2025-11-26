@@ -56,13 +56,13 @@ public class CurseforgePublisher extends Publisher {
 
         var dependencyList = curseforge.getDependencies().stream().map(
                 dep -> ProjectsMetadata.builder()
-                        .projectId(dep.getProjectId())
+                        .slug(dep.getSlug())
                         .relationType(dep.getRelationType())
                         .build()
         ).toList();
 
         var metadata = curseforgeMetadata(curseforge, validGameVersions, dependencyList);
-        project.getLogger().lifecycle("Curseforge metadata: " + metadata);
+        project.getLogger().lifecycle("Curseforge metadata: " + GSON.toJson(metadata));
 
         project.getLogger().lifecycle("Publishing to Curseforge...");
         publishingToCurseforge(metadata, iterator, projectId, token);

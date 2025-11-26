@@ -10,7 +10,7 @@ import java.util.*;
 
 @Getter
 @Setter
-public class CurseforgeConfig extends PublisherConfig<CurseforgeDependency, Integer> {
+public class CurseforgeConfig extends PublisherConfig<CurseforgeDependency, String> {
     private ChangelogType changelogType = ChangelogType.MARKDOWN;
     private List<EnvironmentType> environmentType = List.of(EnvironmentType.CLIENT, EnvironmentType.SERVER);
     private boolean manualRelease = false;
@@ -28,33 +28,33 @@ public class CurseforgeConfig extends PublisherConfig<CurseforgeDependency, Inte
     }
 
     @Override
-    public CurseforgeDependency required(Integer id) {
-        return createDependency(id, RelationType.REQUIRED_DEPENDENCY);
+    public CurseforgeDependency required(String slug) {
+        return createDependency(slug, RelationType.REQUIRED_DEPENDENCY);
     }
 
     @Override
-    public CurseforgeDependency optional(Integer id) {
-        return createDependency(id, RelationType.OPTIONAL_DEPENDENCY);
+    public CurseforgeDependency optional(String slug) {
+        return createDependency(slug, RelationType.OPTIONAL_DEPENDENCY);
     }
 
     @Override
-    public CurseforgeDependency incompatible(Integer id) {
-        return createDependency(id, RelationType.INCOMPATIBLE);
+    public CurseforgeDependency incompatible(String slug) {
+        return createDependency(slug, RelationType.INCOMPATIBLE);
     }
 
     @Override
-    public CurseforgeDependency embedded(Integer id) {
-        return createDependency(id, RelationType.EMBEDDED_LIBRARY);
+    public CurseforgeDependency embedded(String slug) {
+        return createDependency(slug, RelationType.EMBEDDED_LIBRARY);
     }
 
-    public CurseforgeDependency tool(Integer id) {
-        return createDependency(id, RelationType.TOOL);
+    public CurseforgeDependency tool(String slug) {
+        return createDependency(slug, RelationType.TOOL);
     }
 
-    private CurseforgeDependency createDependency(int projectId, RelationType type) {
-        String name = CURSEFORGE + projectId;
+    private CurseforgeDependency createDependency(String slug, RelationType type) {
+        String name = CURSEFORGE + slug;
         CurseforgeDependency dependency = dependencies.create(name);
-        dependency.setProjectId(projectId);
+        dependency.setSlug(slug);
         dependency.setRelationType(type);
         return dependency;
     }

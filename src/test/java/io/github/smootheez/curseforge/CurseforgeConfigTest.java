@@ -37,62 +37,43 @@ class CurseforgeConfigTest {
 
     @Test
     void testRequiredDependencyCreation() {
-        testDependencyCreation(
-                () -> config.required(12345),
-                12345,
-                RelationType.REQUIRED_DEPENDENCY
-        );
+        testDependencyCreation(() -> config.required("test-slug-req"), "test-slug-req", RelationType.REQUIRED_DEPENDENCY);
     }
 
     @Test
     void testOptionalDependencyCreation() {
-        testDependencyCreation(
-                () -> config.optional(67890),
-                67890,
-                RelationType.OPTIONAL_DEPENDENCY
-        );
+        testDependencyCreation(() -> config.optional("test-slug-opt"), "test-slug-opt", RelationType.OPTIONAL_DEPENDENCY);
     }
 
     @Test
     void testIncompatibleDependencyCreation() {
-        testDependencyCreation(
-                () -> config.incompatible(11223),
-                11223,
-                RelationType.INCOMPATIBLE
-        );
+        testDependencyCreation(() -> config.incompatible("test-slug-inc"), "test-slug-inc", RelationType.INCOMPATIBLE);
     }
 
     @Test
     void testEmbeddedDependencyCreation() {
-        testDependencyCreation(
-                () -> config.embedded(44556),
-                44556,
-                RelationType.EMBEDDED_LIBRARY
-        );
+        testDependencyCreation(() -> config.embedded("test-slug-emb"), "test-slug-emb", RelationType.EMBEDDED_LIBRARY);
     }
 
     @Test
     void testToolDependencyCreation() {
-        testDependencyCreation(
-                () -> config.tool(77889),
-                77889,
-                RelationType.TOOL
-        );
+        testDependencyCreation(() -> config.tool("test-slug-tool"), "test-slug-tool", RelationType.TOOL);
     }
+
 
     private void testDependencyCreation(
             Supplier<CurseforgeDependency> creator,
-            Integer projectId,
+            String slug,
             RelationType expectedType
     ) {
-        String expectedName = "curseforge-" + projectId;
+        String expectedName = "curseforge-" + slug;
 
         CurseforgeDependency mockDep = new CurseforgeDependency(expectedName);
         when(container.create(expectedName)).thenReturn(mockDep);
 
         CurseforgeDependency dep = creator.get();
 
-        assertEquals(projectId, dep.getProjectId());
+        assertEquals(slug, dep.getSlug());
         assertEquals(expectedType, dep.getRelationType());
     }
 

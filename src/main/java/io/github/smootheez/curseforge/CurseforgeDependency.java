@@ -7,7 +7,7 @@ import javax.inject.*;
 @Getter
 @Setter
 public class CurseforgeDependency {
-    private int projectId;
+    private String slug;
     private RelationType relationType;
 
     private final String name;
