@@ -84,8 +84,8 @@ mcModPublisher {
     // Loads the changelog content directly from CHANGELOG.md.
     changelog = file("CHANGELOG.md").readText() // if not specified it will send empty string to the API
 
-    // Specifies which files will be uploaded; uses the built jar from the 'jar' task (required).
-    files.from(tasks.named("jar"))
+    // Specifies the files to be uploaded. This example uses the output of the 'remapJar' task.
+    files.from(tasks.named("remapJar"))
 
     // Sets supported Minecraft versions (required).
     gameVersions.addAll(listOf("1.20.1", "1.19.4"))
