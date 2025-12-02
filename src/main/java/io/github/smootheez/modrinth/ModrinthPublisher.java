@@ -11,15 +11,51 @@ import java.io.*;
 import java.util.*;
 import java.util.stream.*;
 
+/**
+ * Publishes mod versions to Modrinth using their official API.
+ * <p>
+ * This publisher is responsible for:
+ * <ul>
+ *     <li>Validating configuration such as release type, status, and game versions</li>
+ *     <li>Fetching available game versions from Modrinth</li>
+ *     <li>Building metadata for the version upload</li>
+ *     <li>Uploading files and metadata via multipart requests</li>
+ * </ul>
+ */
 public class ModrinthPublisher extends Publisher {
+
+    /** Endpoint for uploading a new version to Modrinth. */
     private static final String UPLOAD_URL = "https://api.modrinth.com/v2/version";
+
+    /** Endpoint for fetching all available game version tags from Modrinth. */
     private static final String GAME_VERSION_URL = "https://api.modrinth.com/v2/tag/game_version";
+
+    /** Supported Modrinth version status values. */
     private static final Set<String> VALID_STATUS = Set.of("listed", "archived", "draft", "unlisted", "scheduled");
 
+    /**
+     * Constructs a new {@code ModrinthPublisher}.
+     *
+     * @param project    the Gradle project instance
+     * @param extension  the plugin configuration extension
+     * @param client     the HTTP client used for API communication
+     */
     public ModrinthPublisher(Project project, McModPublisherExtension extension, OkHttpClient client) {
         super(project, extension, client);
     }
 
+    /**
+     * Executes the publishing process to Modrinth.
+     * <p>
+     * This includes:
+     * <ul>
+     *     <li>Validating configuration</li>
+     *     <li>Fetching supported game versions from Modrinth</li>
+     *     <li>Constructing metadata</li>
+     *     <li>Sending the multipart request containing metadata and mod files</li>
+     * </ul>
+     * Logs and aborts on invalid configuration or missing versions.
+     */
     @Override
     public void publish() {
         var modrinth = extension.getModrinth();
@@ -64,9 +100,24 @@ public class ModrinthPublisher extends Publisher {
         publishingToModrinth(metadata, files, filePartNames, token);
     }
 
-    private void publishingToModrinth(ModrinthMetadata metadata, ConfigurableFileCollection files, List<String> filePartNames, String token) {
+    /**
+     * Sends a multipart upload request to Modrinth containing metadata and all mod files.
+     *
+     * @param metadata       the JSON metadata describing this version
+     * @param files          the mod files to upload
+     * @param filePartNames  generated field names for each file part
+     * @param token          Modrinth API authorization token
+     * @throws FailedFileUploadException if the upload request fails
+     */
+    private void publishingToModrinth(ModrinthMetadata metadata,
+                                      ConfigurableFileCollection files,
+                                      List<String> filePartNames,
+                                      String token) {
+
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-        multipartBuilder.addFormDataPart(Constants.DATA,
+
+        multipartBuilder.addFormDataPart(
+                Constants.DATA,
                 null,
                 RequestBody.create(GSON.toJson(metadata), MediaType.parse(Constants.MEDIA_TYPE_JSON))
         );
@@ -106,7 +157,24 @@ public class ModrinthPublisher extends Publisher {
         }
     }
 
-    private ModrinthMetadata modrinthMetadata(String projectId, List<String> validGameVersions, String releaseType, ModrinthConfig modrinth, List<DependencyMetadata> dependecyList, List<String> filePartNames) {
+    /**
+     * Builds a {@link ModrinthMetadata} instance from configuration values.
+     *
+     * @param projectId        the Modrinth project ID
+     * @param validGameVersions game versions confirmed valid by Modrinth
+     * @param releaseType      version release channel (e.g., "release", "beta", "alpha")
+     * @param modrinth         Modrinth-specific configuration
+     * @param dependecyList    dependencies declared for this version
+     * @param filePartNames    names for multipart file sections
+     * @return fully populated {@code ModrinthMetadata}
+     */
+    private ModrinthMetadata modrinthMetadata(String projectId,
+                                              List<String> validGameVersions,
+                                              String releaseType,
+                                              ModrinthConfig modrinth,
+                                              List<DependencyMetadata> dependecyList,
+                                              List<String> filePartNames) {
+
         return ModrinthMetadata.builder()
                 .projectId(projectId)
                 .name(extension.getDisplayName())
@@ -122,6 +190,12 @@ public class ModrinthPublisher extends Publisher {
                 .build();
     }
 
+    /**
+     * Fetches the full list of game version tags from Modrinth.
+     *
+     * @return list of {@link GameVersionTag} objects
+     * @throws FailedFetchGameVersionsException if Modrinth returns an error or the request fails
+     */
     private List<GameVersionTag> fetchGameVersions() {
         var request = new Request.Builder()
                 .url(GAME_VERSION_URL)
@@ -130,11 +204,13 @@ public class ModrinthPublisher extends Publisher {
 
         try (var response = client.newCall(request).execute()) {
             if (!response.isSuccessful())
-                throw new FailedFetchGameVersionsException("Failed to fetch game versions: " + response.code() + " - " + response.message());
+                throw new FailedFetchGameVersionsException(
+                        "Failed to fetch game versions: " +
+                                response.code() + " - " + response.message()
+                );
 
             var responseBody = response.body().string();
-            return GSON.fromJson(responseBody, new TypeToken<List<GameVersionTag>>() {
-            }.getType());
+            return GSON.fromJson(responseBody, new TypeToken<List<GameVersionTag>>() {}.getType());
         } catch (IOException e) {
             throw new FailedFetchGameVersionsException("Failed to fetch game versions" + e.getMessage());
         }

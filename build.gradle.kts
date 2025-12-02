@@ -2,10 +2,11 @@ plugins {
     id("java")
     id("java-gradle-plugin")          // Enables Gradle plugin development
     id("maven-publish")               // Optional: publishing to Maven repo
+    id("com.gradle.plugin-publish") version "2.0.0"
 }
 
 group = "io.github.smootheez"
-version = "1.10-SNAPSHOT"
+version = "1.10"
 
 repositories {
     mavenCentral()
@@ -36,6 +37,8 @@ dependencies {
 }
 
 gradlePlugin {
+    website = "https://github.com/Smootheez/Mc-Mod-Publisher"
+    vcsUrl = "https://github.com/Smootheez/Mc-Mod-Publisher"
     plugins {
         create("McModPublisher") {
             id = "io.github.smootheez.mc-mod-publisher"            // plugin id

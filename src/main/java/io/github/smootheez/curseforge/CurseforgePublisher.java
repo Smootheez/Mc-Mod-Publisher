@@ -9,14 +9,48 @@ import org.gradle.api.*;
 import java.io.*;
 import java.util.*;
 
+/**
+ * Handles publishing mod files to CurseForge using the CurseForge upload API.
+ * <p>
+ * This publisher is responsible for:
+ * <ul>
+ *     <li>Resolving configured game versions, loaders, and environments</li>
+ *     <li>Constructing metadata for the upload request</li>
+ *     <li>Building and sending a multipart upload request to CurseForge</li>
+ *     <li>Logging responses and raising exceptions for failed uploads</li>
+ * </ul>
+ */
 public class CurseforgePublisher extends Publisher {
+
+    /** Upload endpoint for submitting new files to a CurseForge project. */
     private static final String UPLOAD_URL = "https://minecraft.curseforge.com/api/projects/%s/upload-file";
+
+    /** Endpoint for retrieving CurseForge's game version metadata. */
     private static final String GAME_VERSIONS_URL = "https://minecraft.curseforge.com/api/game/versions";
 
+    /**
+     * Constructs a new CurseForge publisher instance.
+     *
+     * @param project   the Gradle project
+     * @param extension the plugin extension containing user configuration
+     * @param client    the HTTP client used for API communication
+     */
     public CurseforgePublisher(Project project, McModPublisherExtension extension, OkHttpClient client) {
         super(project, extension, client);
     }
 
+    /**
+     * Publishes all configured files to CurseForge.
+     * <p>
+     * Steps performed include:
+     * <ol>
+     *     <li>Reading configuration (token, project ID, load targets)</li>
+     *     <li>Resolving valid CurseForge game version IDs</li>
+     *     <li>Constructing upload metadata</li>
+     *     <li>Sending each file to CurseForge using a multipart upload</li>
+     * </ol>
+     * If no valid game versions are found, the publish process is aborted.
+     */
     @Override
     public void publish() {
         var curseforge = extension.getCurseforge();
@@ -24,7 +58,7 @@ public class CurseforgePublisher extends Publisher {
         var projectId = curseforge.getProjectId().trim();
         var iterator = extension.getFiles().getFiles().iterator();
 
-        var desiredMcVersions = extension.getGameVersions(); // ["1.20.1"]
+        var desiredMcVersions = extension.getGameVersions();
         var desiredLoaders = extension.getLoaders().stream()
                 .map(this::mapLoaderToCF)
                 .toList();
@@ -36,15 +70,12 @@ public class CurseforgePublisher extends Publisher {
         var validGameVersions = fetchGameVersions(token).stream()
                 .filter(tag -> {
                     var type = tag.gameVersionTypeId();
-
-                    return type == 77784   // Minecraft versions
-                            || type == 68441   // Loaders
-                            || type == 75208;  // Client/Server
+                    return type == 77784 || type == 68441 || type == 75208;
                 })
                 .filter(tag ->
-                        desiredMcVersions.contains(tag.name())
-                                || desiredLoaders.contains(tag.name())
-                                || desiredEnvs.contains(tag.name())
+                        desiredMcVersions.contains(tag.name()) ||
+                                desiredLoaders.contains(tag.name()) ||
+                                desiredEnvs.contains(tag.name())
                 )
                 .map(GameVersionTag::id)
                 .toList();
@@ -54,12 +85,12 @@ public class CurseforgePublisher extends Publisher {
             return;
         }
 
-        var dependencyList = curseforge.getDependencies().stream().map(
-                dep -> ProjectsMetadata.builder()
+        var dependencyList = curseforge.getDependencies().stream()
+                .map(dep -> ProjectsMetadata.builder()
                         .slug(dep.getSlug())
                         .relationType(dep.getRelationType())
-                        .build()
-        ).toList();
+                        .build())
+                .toList();
 
         var metadata = curseforgeMetadata(curseforge, validGameVersions, dependencyList);
         project.getLogger().lifecycle("Curseforge metadata: " + GSON.toJson(metadata));
@@ -68,6 +99,12 @@ public class CurseforgePublisher extends Publisher {
         publishingToCurseforge(metadata, iterator, projectId, token);
     }
 
+    /**
+     * Maps internal loader types to CurseForge’s corresponding loader name.
+     *
+     * @param loader the loader type specified in the configuration
+     * @return CurseForge’s loader label
+     */
     private String mapLoaderToCF(LoaderType loader) {
         return switch (loader) {
             case FABRIC -> "Fabric";
@@ -77,6 +114,12 @@ public class CurseforgePublisher extends Publisher {
         };
     }
 
+    /**
+     * Maps internal environment types to CurseForge’s client/server labels.
+     *
+     * @param env the environment type
+     * @return CurseForge’s environment name
+     */
     private String mapEnvironmentToCF(EnvironmentType env) {
         return switch (env) {
             case CLIENT -> "Client";
@@ -84,9 +127,19 @@ public class CurseforgePublisher extends Publisher {
         };
     }
 
+    /**
+     * Performs the multipart upload to CurseForge.
+     *
+     * @param metadata  the metadata payload describing the uploaded file
+     * @param iterator  iterator over files scheduled for upload
+     * @param projectId the CurseForge project ID
+     * @param token     authentication token
+     */
     private void publishingToCurseforge(CurseforgeMetadata metadata, Iterator<File> iterator, String projectId, String token) {
         var multipartBuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-        multipartBuilder.addFormDataPart(Constants.METADATA,
+
+        multipartBuilder.addFormDataPart(
+                Constants.METADATA,
                 null,
                 RequestBody.create(GSON.toJson(metadata), MediaType.parse(Constants.MEDIA_TYPE_JSON))
         );
@@ -108,22 +161,36 @@ public class CurseforgePublisher extends Publisher {
 
         try (var response = client.newCall(request).execute()) {
             var body = response.body().string();
+
             project.getLogger().lifecycle("Response received: code=" + response.code() + " message=" + response.message());
             project.getLogger().lifecycle("Response body: " + body);
 
-
-            if (!response.isSuccessful())
+            if (!response.isSuccessful()) {
                 throw new FailedFileUploadException(
                         "Failed to upload mod to Curseforge: " +
                                 response.code() + " - " + response.message() + " - BODY: " + body
                 );
+            }
 
             project.getLogger().lifecycle("Successfully uploaded mod to Curseforge!");
         } catch (IOException e) {
             throw new FailedFileUploadException("Failed to upload mod to Curseforge: " + e.getMessage());
-        }    }
+        }
+    }
 
-    private CurseforgeMetadata curseforgeMetadata(CurseforgeConfig curseforge, List<Integer> validGameVersions, List<ProjectsMetadata> dependencyList) {
+    /**
+     * Builds a {@link CurseforgeMetadata} instance based on configuration and valid game versions.
+     *
+     * @param curseforge        CurseForge-specific configuration
+     * @param validGameVersions resolved CurseForge game version IDs
+     * @param dependencyList    resolved dependency metadata
+     * @return a fully constructed CurseForge metadata object
+     */
+    private CurseforgeMetadata curseforgeMetadata(
+            CurseforgeConfig curseforge,
+            List<Integer> validGameVersions,
+            List<ProjectsMetadata> dependencyList
+    ) {
         var builder = CurseforgeMetadata.builder()
                 .changelog(extension.getChangelog())
                 .changelogType(curseforge.getChangelogType())
@@ -139,6 +206,13 @@ public class CurseforgePublisher extends Publisher {
         return builder.build();
     }
 
+    /**
+     * Fetches the full list of CurseForge game version tags.
+     *
+     * @param token the API token for authentication
+     * @return list of available game version tags
+     * @throws FailedFetchGameVersionsException if the request fails
+     */
     private List<GameVersionTag> fetchGameVersions(String token) {
         var request = new Request.Builder()
                 .url(GAME_VERSIONS_URL)
@@ -149,14 +223,18 @@ public class CurseforgePublisher extends Publisher {
 
         try (var response = client.newCall(request).execute()) {
             var body = response.body().string();
-            if (!response.isSuccessful())
-                throw new FailedFetchGameVersionsException("Failed to fetch game versions: " +
-                        response.code() + " - " + response.message() + " - BODY: " + body);
 
-            return GSON.fromJson(body, new TypeToken<List<GameVersionTag>>() {
-            }.getType());
+            if (!response.isSuccessful()) {
+                throw new FailedFetchGameVersionsException(
+                        "Failed to fetch game versions: " +
+                                response.code() + " - " + response.message() + " - BODY: " + body
+                );
+            }
+
+            return GSON.fromJson(body, new TypeToken<List<GameVersionTag>>() {}.getType());
         } catch (IOException e) {
             throw new FailedFetchGameVersionsException("Failed to fetch game versions" + e.getMessage());
         }
     }
 }
+
