@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "io.github.smootheez"
-version = "1.10"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
