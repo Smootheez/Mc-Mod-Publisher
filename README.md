@@ -163,134 +163,57 @@ mcModPublisher {
 
 ---
 
-## 🚀 Installation Guide
+# 🚀 Installation Guide
 
-1. **Clone this repository** at the same directory level as the project where you want to use the plugin:
-
-   ```bash
-   git clone https://github.com/Smootheez/Mc-Mod-Publisher.git
-   ```
-
-2. **Register the plugin** in your root project settings via a composite build.
-
-    ### **Kotlin DSL — `settings.gradle.kts`**
-
-    ```kotlin
-    pluginManagement {
-        includeBuild("../Mc-Mod-Publisher")
-    }
-    ```
-
-    ### **Groovy DSL — `settings.gradle`**
-
-    ```groovy
-    pluginManagement {
-        includeBuild("../Mc-Mod-Publisher")
-    }
-    ```
-
-3. **Apply the plugin** in your project’s build script.
-
-    ### **Kotlin DSL — `build.gradle.kts`**
-
-    ```kotlin
-    plugins {
-        id("io.github.smootheez.mc-mod-publisher")
-    }
-    ```
-
-    ### **Groovy DSL — `build.gradle`**
-
-    ```groovy
-    plugins {
-        id 'io.github.smootheez.mc-mod-publisher'
-    }
-    ```
+Installation now works like any standard Gradle plugin published on the Plugin Portal.
 
 ---
 
-# 📁 Recommended Project Layout
+## 1. Add the plugin (no extra repositories required)
 
-```
-📂 workspace/
-├── 📂 Mc-Mod-Publisher/          <-- The plugin project (cloned from GitHub)
-│   ├── build.gradle.kts
-│   ├── settings.gradle.kts
-│   └── src/...
-│
-└── 📂 MyMinecraftMod/            <-- Your actual mod project
-    ├── build.gradle.kts (or build.gradle)
-    ├── settings.gradle.kts (or settings.gradle)
-    └── src/
+### **Kotlin DSL — `build.gradle.kts`**
+
+```kotlin
+plugins {
+    id("io.github.smootheez.mc-mod-publisher") version "1.0.0"
+}
 ```
 
-Both folders should sit **side-by-side** in the same parent directory, commonly your development workspace.
+### **Groovy DSL — `build.gradle`**
+
+```groovy
+plugins {
+    id 'io.github.smootheez.mc-mod-publisher' version '1.0.0'
+}
+```
+
+> Replace `"1.0.0"` with the latest published version.
 
 ---
 
-## 🔄 Alternative Installation — Using Maven Local
+## 2. (Optional) If you're using a custom plugin version repository
 
-This method lets you install the plugin into your local Maven repository and consume it like any other dependency, without using a composite build.
+Only needed if you want to override the release with a locally installed build.
 
-### 1. Install the plugin to your local Maven repository
-
-Inside the **Mc-Mod-Publisher** project folder:
-
-```bash
-./gradlew publishToMavenLocal
-```
-
-This places the plugin under:
-
-```
-~/.m2/repository/io/github/smootheez/mc-mod-publisher/
-```
-
----
-
-### 2. Add the plugin repository to your mod project
-
-#### **Kotlin DSL — `settings.gradle.kts`**
+### **Kotlin DSL — `settings.gradle.kts`**
 
 ```kotlin
 pluginManagement {
     repositories {
-        mavenLocal()
         gradlePluginPortal()
-        mavenCentral()
+        mavenLocal() // optional
     }
 }
 ```
 
-#### **Groovy DSL — `settings.gradle`**
+### **Groovy DSL — `settings.gradle`**
 
 ```groovy
 pluginManagement {
     repositories {
-        mavenLocal()
         gradlePluginPortal()
-        mavenCentral()
+        mavenLocal() // optional
     }
-}
-```
-
----
-
-### 3. Apply the plugin
-
-#### **Kotlin DSL — `build.gradle.kts`**
-
-```kotlin
-plugins {
-    id("io.github.smootheez.mc-mod-publisher") version "1.10-SNAPSHOT"
-}
-```
-
-#### **Groovy DSL — `build.gradle`**
-
-```groovy
-plugins {
-    id 'io.github.smootheez.mc-mod-publisher' version '1.10-SNAPSHOT'
 }
 ```
 
@@ -298,7 +221,7 @@ plugins {
 
 # 🧪 Publishing Commands
 
-Run from inside your mod project folder:
+Run from inside your mod project:
 
 ```bash
 ./gradlew publishModToAll
